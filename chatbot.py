@@ -17,21 +17,42 @@ client = OpenAI(
 
 
 
-def get_reply(messages: list) -> str:
-    """Send the full converation history and get next reply."""
-    response = client.chat.completions.create(
+def get_reply_streaming(messages: list) -> str:
+    """
+    Stream the reply token by token.
+    Prints each chunk as it arrives, returns the full reply string.
+    """
+    stream = client.chat.completions.create(
         model="minimax/minimax-m2.5:free",
         max_tokens=1024,
         messages=messages,
         stream=True
     )
-    return response.choices[0].message.content
+
+    full_reply = ""
+
+    print("\033[92mBot:\033[0m ", end="", flush=True)  # green "Bot:" label
+
+    for chunk in stream:
+        piece = chunk.choices[0].delta.content
+
+        # last chunk is None — skip it
+        if piece is None:
+            continue
+
+        print(piece, end="", flush=True)               # print token immediately
+        full_reply += piece                             # collects for message history
+
+    print("\n")      # newline after reply finishes
+    return full_reply
 
 
 def count_tokens_roughly(messages: list) -> int:
     """Rough estimate: 1 token ≈ 4 characters."""
     total_chars = sum(len(m["content"]) for m in messages)
     return total_chars // 4
+
+
 
 def chat():
     messages = [
@@ -49,20 +70,23 @@ def chat():
         if user_input.lower()=="quit":
             console.print("[dim]Goodbye![/dim]")
             break
-
+        
+        # add user message
         messages.append({
             "role": "user",
             "content": user_input
         })
 
-        reply = get_reply(messages)
+        # get streaming reply — prints as it generates
+        reply = get_reply_streaming(messages)
+
+        # add assistant reply to history
         messages.append({
             "role": "assistant",
             "content":reply
         })
 
-        console.print(f"[bold green]Bot:[/] {reply}")
-
+        # show token usage
         token_estimate = count_tokens_roughly(messages)
         console.print(
             f"[dim]  ↳ {len(messages)} messages in history "
@@ -76,7 +100,3 @@ def chat():
 if __name__ == "__main__":
     chat()
         
-
-
-
-
