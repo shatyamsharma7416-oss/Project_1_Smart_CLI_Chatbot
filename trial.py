@@ -1,17 +1,5 @@
-messages = [
-    {'role': "assistant", "content":"SYSTEM_PROMPT"},
-    {'role': "system", "content":"SYSTEM_PROMPT"},
-    {'role': "user", "content":"SYSTEM_PROMPT"},
-]
+import json
+filename = f"chat_history/chat_.json"
 
-# for i, m in enumerate(messages):
-#     role_color = {
-#                 "system": "yellow",
-#                 "user": "blue",
-#                 "assistant": "green"
-#             }.get(m["role"], "white")
-    
-#     print(role_color)
-
-messages = [messages[0]]
-print(type(messages))
+with open(filename, "w", encoding='utf-8') as f:
+    json.dump({"hi": 1}, f, indent=4, ensure_ascii=False)
