@@ -13,13 +13,13 @@ load_dotenv()
 console = Console()
 
 client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY")
+    base_url="https://router.huggingface.co/v1",
+    api_key=os.getenv("HF_TOKEN")
 )
 
 #  ---------------------- Model config ----------------------
 
-MODEL = "minimax/minimax-m2.5:free"
+MODEL = "zai-org/GLM-5.1:fireworks-ai"
 CONTEXT_LIMIT = 10000   # min-max context window (tokens)
 COST_PER_1K_INPUT  = 0  # $ per 1K input tokens  (adjust to your plan)
 COST_PER_1K_OUTPUT = 0  # $ per 1K output tokens
@@ -155,7 +155,7 @@ def pick_persona() -> dict:
     """Show persona menu and return the chosen persona dict."""
     console.print("\n[bold]Choose a persona[/]")
     for key, p in PERSONAS.items():
-        if key != 4:
+        if int(key) != 4:
             console.print(f" [bold]{key}[/]. {p["name"]}")
     console.print(" [bold]4[/]. Custom (write your own)\n")
 
@@ -267,7 +267,11 @@ def get_reply_streaming(messages: list) -> str:
             input_tokens  = chunk.usage.prompt_tokens
             output_tokens = chunk.usage.completion_tokens
 
-        piece = chunk.choices[0].delta.content
+        try:
+            piece = chunk.choices[0].delta.content
+        except IndexError:
+            piece = ""
+        
         # last chunk is None — skip it
         if piece is None:
             continue
